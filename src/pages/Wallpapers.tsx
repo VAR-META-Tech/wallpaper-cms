@@ -397,12 +397,12 @@ const Wallpapers: React.FC = () => {
 
           <Form.Item
             name="fullSizeUrl"
-            label="Full Size Image/Video"
+            label="Full Size Image"
             rules={[{ required: true, message: 'Please upload full size file!' }]}
           >
             <FileUpload 
-              accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov,.avi"
-              maxSize={50}
+              accept=".jpg,.jpeg,.png,.gif,.webp"
+              maxSize={10}
               listType="picture-card"
             />
           </Form.Item>

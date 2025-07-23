@@ -28,23 +28,15 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         
         try {
-          // Simple demo authentication - accept admin/admin123
-          if (credentials.username === 'admin' && credentials.password === 'admin123') {
-            const user = { id: '1', username: 'admin', role: 'admin' };
-            const token = 'demo_token_' + Date.now();
-            localStorage.setItem('auth_token', token);
-            set({
-              user,
-              token,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null,
-            });
-          } else {
-            throw new Error('Invalid credentials');
-          }
+          // TODO: Replace with actual API authentication
+          // This is a placeholder for demonstration purposes only
+          // In production, implement proper server-side authentication
+          
+          // For now, throw error to indicate authentication is not implemented
+          throw new Error('Authentication not implemented. Please configure proper authentication.');
+          
         } catch (error: any) {
-          const errorMessage = 'Invalid username or password';
+          const errorMessage = error.message || 'Authentication failed';
           set({
             error: errorMessage,
             isLoading: false,
@@ -66,17 +58,21 @@ export const useAuthStore = create<AuthState>()(
 
       verifyToken: async () => {
         const token = localStorage.getItem('auth_token');
-        if (!token || !token.startsWith('demo_token_')) {
+        if (!token) {
           set({ isAuthenticated: false });
           return;
         }
 
-        // Demo token verification - accept any token that starts with 'demo_token_'
-        set({
-          user: { id: '1', username: 'admin', role: 'admin' },
-          token,
-          isAuthenticated: true,
-        });
+        try {
+          // TODO: Replace with actual API token verification
+          // This should call your authentication API to verify the token
+          // const response = await authApi.verifyToken();
+          
+          // For now, always set as unauthenticated
+          set({ isAuthenticated: false });
+        } catch (error) {
+          set({ isAuthenticated: false });
+        }
       },
 
       clearError: () => set({ error: null }),

@@ -43,12 +43,27 @@ npm run dev
 
 ### Environment Variables
 
-Update API base URL in `src/services/api.ts`:
+Copy the example environment file and configure:
 
-```typescript
-const API_BASE_URL = 'http://localhost:8082/api'; // Development
-// const API_BASE_URL = 'https://your-api-domain.com/api'; // Production
+```bash
+cp .env.example .env
 ```
+
+Configure the following environment variables in `.env`:
+
+```env
+# API Configuration
+VITE_API_BASE_URL=http://localhost:8082/api
+
+# File Upload Configuration  
+VITE_UPLOAD_MAX_SIZE=52428800
+
+# App Configuration
+VITE_APP_NAME=Wallpaper CMS
+VITE_APP_VERSION=1.0.0
+```
+
+**⚠️ Security Note**: Only VITE_ prefixed variables are exposed to client-side code. Never put sensitive information in VITE_ variables.
 
 ## Building for Production
 
@@ -112,9 +127,9 @@ The CMS integrates with the wallpaper backend API:
 
 ### File Upload
 - Drag & drop interface
-- Image and video support
-- File type validation
-- Size limits (50MB max)
+- Image support (JPG, PNG, GIF, WebP)  
+- Strict file type validation
+- Size limits (10MB max)
 - Google Cloud Storage integration
 
 ### Dashboard
@@ -135,6 +150,26 @@ The CMS integrates with the wallpaper backend API:
 3. Commit changes (`git commit -m 'Add amazing feature'`)
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
+
+## Security
+
+### Authentication
+
+This CMS includes a placeholder authentication system for development purposes. **For production use:**
+
+1. **Implement proper server-side authentication**
+2. **Configure environment variables** - Copy `.env.example` to `.env` and set your values
+3. **Enable CORS properly** - Configure your API server's CORS settings
+4. **Use HTTPS** - Always use HTTPS in production
+5. **Validate uploads** - File uploads include client-side validation, but implement server-side validation too
+
+### Development vs Production
+
+- **Development**: Uses placeholder authentication (currently disabled)
+- **Production**: Requires proper authentication implementation
+- **Environment Variables**: Use `.env.example` as a template
+
+⚠️ **Important**: This repository contains no sensitive credentials and is safe for public use, but requires proper authentication setup for production deployment.
 
 ## License
 

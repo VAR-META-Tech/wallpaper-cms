@@ -23,8 +23,8 @@ interface UploadResponse {
 const FileUpload: React.FC<FileUploadProps> = ({
   value,
   onChange,
-  accept = '.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov,.avi',
-  maxSize = 50,
+  accept = '.jpg,.jpeg,.png,.gif,.webp',
+  maxSize = 10,
   listType = 'picture-card',
   disabled = false,
 }) => {
@@ -34,18 +34,26 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const [previewTitle, setPreviewTitle] = useState('');
 
   const beforeUpload = (file: RcFile) => {
-    const isValidType = accept.split(',').some(type => 
-      file.type.includes(type.replace('.', '').replace('jpg', 'jpeg'))
-    );
+    // Strict file type validation
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const isValidType = allowedTypes.includes(file.type);
     
     if (!isValidType) {
-      message.error('Invalid file type!');
+      message.error('Invalid file type! Only JPG, PNG, GIF, and WebP images are allowed.');
       return false;
     }
     
     const isValidSize = file.size / 1024 / 1024 < maxSize;
     if (!isValidSize) {
       message.error(`File must be smaller than ${maxSize}MB!`);
+      return false;
+    }
+    
+    // Additional security check - validate file extension
+    const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    if (!validExtensions.includes(fileExtension)) {
+      message.error('Invalid file extension!');
       return false;
     }
     
@@ -109,7 +117,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         name="file"
         listType={listType}
         fileList={fileList}
-        action="http://localhost:8082/api/admin/upload"
+        action={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082/api'}/admin/upload`}
         beforeUpload={beforeUpload}
         onChange={handleChange}
         onPreview={handlePreview}

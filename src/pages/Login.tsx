@@ -102,7 +102,7 @@ const Login: React.FC = () => {
 
           <div style={{ textAlign: 'center' }}>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              Demo credentials: admin / admin123
+              Please contact your administrator for access credentials.
             </Typography.Text>
           </div>
         </Space>
