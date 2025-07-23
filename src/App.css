@@ -1,0 +1,61 @@
+/* App specific styles */
+.App {
+  height: 100vh;
+}
+
+/* Login page styles */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Table responsive */
+.ant-table-wrapper {
+  overflow-x: auto;
+}
+
+/* Custom components */
+.dashboard-stats {
+  margin-bottom: 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .filter-bar {
+    flex-direction: column;
+  }
+  
+  .ant-layout-sider {
+    position: fixed !important;
+    z-index: 1000;
+  }
+}

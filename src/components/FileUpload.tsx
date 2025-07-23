@@ -1,0 +1,144 @@
+import React, { useState } from 'react';
+import { Upload, message, Modal, Image } from 'antd';
+import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
+import type { UploadChangeParam } from 'antd/es/upload';
+import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface';
+
+interface FileUploadProps {
+  value?: string;
+  onChange?: (url: string) => void;
+  accept?: string;
+  maxSize?: number; // in MB
+  listType?: 'text' | 'picture' | 'picture-card';
+  disabled?: boolean;
+}
+
+interface UploadResponse {
+  url: string;
+  filename: string;
+  size: number;
+  mimeType: string;
+}
+
+const FileUpload: React.FC<FileUploadProps> = ({
+  value,
+  onChange,
+  accept = '.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov,.avi',
+  maxSize = 50,
+  listType = 'picture-card',
+  disabled = false,
+}) => {
+  const [loading, setLoading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
+
+  const beforeUpload = (file: RcFile) => {
+    const isValidType = accept.split(',').some(type => 
+      file.type.includes(type.replace('.', '').replace('jpg', 'jpeg'))
+    );
+    
+    if (!isValidType) {
+      message.error('Invalid file type!');
+      return false;
+    }
+    
+    const isValidSize = file.size / 1024 / 1024 < maxSize;
+    if (!isValidSize) {
+      message.error(`File must be smaller than ${maxSize}MB!`);
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleChange: UploadProps['onChange'] = (info: UploadChangeParam<UploadFile>) => {
+    if (info.file.status === 'uploading') {
+      setLoading(true);
+      return;
+    }
+    
+    if (info.file.status === 'done') {
+      setLoading(false);
+      const response = info.file.response;
+      if (response && response.success && response.data) {
+        const uploadData: UploadResponse = response.data;
+        onChange?.(uploadData.url);
+        message.success('File uploaded successfully!');
+      } else {
+        message.error('Upload failed!');
+      }
+    }
+    
+    if (info.file.status === 'error') {
+      setLoading(false);
+      message.error('Upload failed!');
+    }
+  };
+
+  const handlePreview = async (file: UploadFile) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj as RcFile);
+    }
+
+    setPreviewImage(file.url || (file.preview as string));
+    setPreviewOpen(true);
+    setPreviewTitle(file.name || file.url!.substring(file.url!.lastIndexOf('/') + 1));
+  };
+
+  const handleCancel = () => setPreviewOpen(false);
+
+  const uploadButton = (
+    <div>
+      {loading ? <LoadingOutlined /> : <PlusOutlined />}
+      <div style={{ marginTop: 8 }}>Upload</div>
+    </div>
+  );
+
+  // Convert current value to fileList format
+  const fileList: UploadFile[] = value ? [{
+    uid: '-1',
+    name: 'current-file',
+    status: 'done',
+    url: value,
+  }] : [];
+
+  return (
+    <>
+      <Upload
+        name="file"
+        listType={listType}
+        fileList={fileList}
+        action="http://localhost:8082/api/admin/upload"
+        beforeUpload={beforeUpload}
+        onChange={handleChange}
+        onPreview={handlePreview}
+        accept={accept}
+        disabled={disabled}
+        maxCount={1}
+      >
+        {fileList.length >= 1 ? null : uploadButton}
+      </Upload>
+      
+      <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancel}>
+        <Image
+          alt="preview"
+          style={{ width: '100%' }}
+          src={previewImage}
+          preview={false}
+        />
+      </Modal>
+    </>
+  );
+};
+
+// Helper function to convert file to base64 for preview
+const getBase64 = (file: RcFile): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+
+export default FileUpload;
