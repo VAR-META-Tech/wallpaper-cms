@@ -12,11 +12,9 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (values: LoginCredentials) => {
     clearError();
-    try {
-      await login(values);
-    } catch (err) {
-      // Error is handled in the store
-    }
+    const result = await login(values);
+    // Success/error handling is managed by the auth store
+    // Component will re-render based on auth state changes
   };
 
   return (
