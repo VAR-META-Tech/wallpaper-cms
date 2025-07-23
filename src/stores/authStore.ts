@@ -32,7 +32,16 @@ export const useAuthStore = create<AuthState>()(
           // This is a placeholder for demonstration purposes only
           // In production, implement proper server-side authentication
           
-          // For now, throw error to indicate authentication is not implemented
+          // Example of how to implement real authentication:
+          // const response = await authApi.login(credentials);
+          // if (response.data.success) {
+          //   const { token, user } = response.data.data;
+          //   localStorage.setItem('auth_token', token);
+          //   set({ user, token, isAuthenticated: true, isLoading: false });
+          //   return;
+          // }
+          
+          console.log('Login attempt with username:', credentials.username);
           throw new Error('Authentication not implemented. Please configure proper authentication.');
           
         } catch (error: any) {
