@@ -3,6 +3,7 @@ import { Upload, message, Modal, Image } from 'antd';
 import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { UploadChangeParam } from 'antd/es/upload';
 import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface';
+import { uploadApi } from '../services/api';
 
 interface FileUploadProps {
   value?: string;
@@ -84,6 +85,30 @@ const FileUpload: React.FC<FileUploadProps> = ({
     }
   };
 
+  const customUpload = async ({ file, onProgress, onSuccess, onError }: any) => {
+    try {
+      setLoading(true);
+      const response = await uploadApi.uploadFile(file as File);
+      
+      if (response.data.success) {
+        const uploadData: UploadResponse = response.data.data;
+        onChange?.(uploadData.url);
+        message.success('File uploaded successfully!');
+        onSuccess(response.data, file);
+      } else {
+        message.error('Upload failed!');
+        onError(new Error('Upload failed'));
+      }
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Upload failed!';
+      message.error(errorMessage);
+      onError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePreview = async (file: UploadFile) => {
     if (!file.url && !file.preview) {
       file.preview = await getBase64(file.originFileObj as RcFile);
@@ -117,7 +142,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         name="file"
         listType={listType}
         fileList={fileList}
-        action={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082/api'}/admin/upload`}
+        customRequest={customUpload}
         beforeUpload={beforeUpload}
         onChange={handleChange}
         onPreview={handlePreview}
