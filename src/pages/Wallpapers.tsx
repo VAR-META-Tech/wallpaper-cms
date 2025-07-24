@@ -400,8 +400,12 @@ const Wallpapers: React.FC = () => {
 
           <Form.Item
             name="fullSizeUrl"
-            label={selectedWallpaperType === WallpaperTypeEnum.LIVE ? "Video File" : "Full Size Image"}
-            rules={[{ required: true, message: `Please upload ${selectedWallpaperType === WallpaperTypeEnum.LIVE ? 'video' : 'full size'} file!` }]}
+            label={
+              selectedWallpaperType === WallpaperTypeEnum.LIVE ? "Video File" :
+              selectedWallpaperType === WallpaperTypeEnum.DOUBLE ? "Left Image (User A)" :
+              "Full Size Image"
+            }
+            rules={[{ required: true, message: `Please upload ${selectedWallpaperType === WallpaperTypeEnum.LIVE ? 'video' : 'image'} file!` }]}
           >
             <FileUpload 
               accept={selectedWallpaperType === WallpaperTypeEnum.LIVE ? ".mp4,.avi,.mov,.webm,.mkv" : ".jpg,.jpeg,.png,.gif,.webp"}
@@ -410,6 +414,20 @@ const Wallpapers: React.FC = () => {
               allowVideo={selectedWallpaperType === WallpaperTypeEnum.LIVE}
             />
           </Form.Item>
+
+          {selectedWallpaperType === WallpaperTypeEnum.DOUBLE && (
+            <Form.Item
+              name="lockScreenUrl"
+              label="Right Image (User B)"
+              rules={[{ required: true, message: 'Please upload right image for couple wallpaper!' }]}
+            >
+              <FileUpload 
+                accept=".jpg,.jpeg,.png,.gif,.webp"
+                maxSize={10}
+                listType="picture-card"
+              />
+            </Form.Item>
+          )}
 
           <Form.Item
             name="tags"
