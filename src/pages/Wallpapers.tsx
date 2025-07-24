@@ -26,6 +26,7 @@ const Wallpapers: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingWallpaper, setEditingWallpaper] = useState<Wallpaper | null>(null);
   const [form] = Form.useForm();
+  const [selectedWallpaperType, setSelectedWallpaperType] = useState<string>('');
 
   useEffect(() => {
     loadWallpapers();
@@ -97,12 +98,14 @@ const Wallpapers: React.FC = () => {
 
   const handleEdit = (wallpaper: Wallpaper) => {
     setEditingWallpaper(wallpaper);
+    setSelectedWallpaperType(wallpaper.type);
     form.setFieldsValue(wallpaper);
     setModalVisible(true);
   };
 
   const handleAdd = () => {
     setEditingWallpaper(null);
+    setSelectedWallpaperType('');
     form.resetFields();
     setModalVisible(true);
   };
@@ -362,7 +365,7 @@ const Wallpapers: React.FC = () => {
             label="Type"
             rules={[{ required: true, message: 'Please select type!' }]}
           >
-            <Select>
+            <Select onChange={(value) => setSelectedWallpaperType(value)}>
               {Object.values(WallpaperTypeEnum).map(type => (
                 <Option key={type} value={type}>{type}</Option>
               ))}
@@ -397,13 +400,14 @@ const Wallpapers: React.FC = () => {
 
           <Form.Item
             name="fullSizeUrl"
-            label="Full Size Image"
-            rules={[{ required: true, message: 'Please upload full size file!' }]}
+            label={selectedWallpaperType === WallpaperTypeEnum.LIVE ? "Video File" : "Full Size Image"}
+            rules={[{ required: true, message: `Please upload ${selectedWallpaperType === WallpaperTypeEnum.LIVE ? 'video' : 'full size'} file!` }]}
           >
             <FileUpload 
-              accept=".jpg,.jpeg,.png,.gif,.webp"
-              maxSize={10}
+              accept={selectedWallpaperType === WallpaperTypeEnum.LIVE ? ".mp4,.avi,.mov,.webm,.mkv" : ".jpg,.jpeg,.png,.gif,.webp"}
+              maxSize={selectedWallpaperType === WallpaperTypeEnum.LIVE ? 100 : 10}
               listType="picture-card"
+              allowVideo={selectedWallpaperType === WallpaperTypeEnum.LIVE}
             />
           </Form.Item>
 

@@ -12,6 +12,7 @@ interface FileUploadProps {
   maxSize?: number; // in MB
   listType?: 'text' | 'picture' | 'picture-card';
   disabled?: boolean;
+  allowVideo?: boolean; // Enable video upload for Live wallpapers
 }
 
 interface UploadResponse {
@@ -28,6 +29,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   maxSize = 10,
   listType = 'picture-card',
   disabled = false,
+  allowVideo = false,
 }) => {
   const [loading, setLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -35,23 +37,33 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const [previewTitle, setPreviewTitle] = useState('');
 
   const beforeUpload = (file: RcFile) => {
-    // Strict file type validation
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    // Define allowed types based on allowVideo flag
+    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const videoTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/webm', 'video/mkv'];
+    const allowedTypes = allowVideo ? [...imageTypes, ...videoTypes] : imageTypes;
+    
     const isValidType = allowedTypes.includes(file.type);
     
     if (!isValidType) {
-      message.error('Invalid file type! Only JPG, PNG, GIF, and WebP images are allowed.');
+      const typeMessage = allowVideo 
+        ? 'Invalid file type! Only JPG, PNG, GIF, WebP images and MP4, AVI, MOV, WebM, MKV videos are allowed.'
+        : 'Invalid file type! Only JPG, PNG, GIF, and WebP images are allowed.';
+      message.error(typeMessage);
       return false;
     }
     
-    const isValidSize = file.size / 1024 / 1024 < maxSize;
+    // Different size limits for video vs image
+    const sizeLimit = allowVideo && videoTypes.includes(file.type) ? maxSize * 10 : maxSize; // 10x larger for video
+    const isValidSize = file.size / 1024 / 1024 < sizeLimit;
     if (!isValidSize) {
-      message.error(`File must be smaller than ${maxSize}MB!`);
+      message.error(`File must be smaller than ${sizeLimit}MB!`);
       return false;
     }
     
     // Additional security check - validate file extension
-    const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const videoExtensions = ['.mp4', '.avi', '.mov', '.webm', '.mkv'];
+    const validExtensions = allowVideo ? [...imageExtensions, ...videoExtensions] : imageExtensions;
     const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
     if (!validExtensions.includes(fileExtension)) {
       message.error('Invalid file extension!');
@@ -113,6 +125,17 @@ const FileUpload: React.FC<FileUploadProps> = ({
   };
 
   const handlePreview = async (file: UploadFile) => {
+    // Check if it's a video file
+    const isVideo = file.type && file.type.startsWith('video/');
+    
+    if (isVideo) {
+      // For videos, just use the URL or show a video preview
+      setPreviewImage(file.url || '');
+      setPreviewOpen(true);
+      setPreviewTitle(file.name || file.url!.substring(file.url!.lastIndexOf('/') + 1));
+      return;
+    }
+
     if (!file.url && !file.preview) {
       file.preview = await getBase64(file.originFileObj as RcFile);
     }
@@ -157,12 +180,23 @@ const FileUpload: React.FC<FileUploadProps> = ({
       </Upload>
       
       <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancel}>
-        <Image
-          alt="preview"
-          style={{ width: '100%' }}
-          src={previewImage}
-          preview={false}
-        />
+        {previewImage && previewImage.includes('.mp4') || previewImage.includes('.avi') || 
+         previewImage.includes('.mov') || previewImage.includes('.webm') || previewImage.includes('.mkv') ? (
+          <video
+            controls
+            style={{ width: '100%', maxHeight: '400px' }}
+            src={previewImage}
+          >
+            Your browser does not support the video tag.
+          </video>
+        ) : (
+          <Image
+            alt="preview"
+            style={{ width: '100%' }}
+            src={previewImage}
+            preview={false}
+          />
+        )}
       </Modal>
     </>
   );
