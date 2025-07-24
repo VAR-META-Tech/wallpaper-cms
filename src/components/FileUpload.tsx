@@ -85,7 +85,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
     }
   };
 
-  const customUpload = async ({ file, onProgress, onSuccess, onError }: any) => {
+  const customUpload = async (options: any) => {
+    const { file, onSuccess, onError } = options;
     try {
       setLoading(true);
       const response = await uploadApi.uploadFile(file as File);
@@ -99,11 +100,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
         message.error('Upload failed!');
         onError(new Error('Upload failed'));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Upload error:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Upload failed!';
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (error as any)?.response?.data?.error || 'Upload failed!';
       message.error(errorMessage);
-      onError(error);
+      onError(error instanceof Error ? error : new Error('Upload failed'));
     } finally {
       setLoading(false);
     }
