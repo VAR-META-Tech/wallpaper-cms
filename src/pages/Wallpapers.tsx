@@ -9,6 +9,7 @@ import {
 } from '@ant-design/icons';
 import { wallpaperApi, categoryApi } from '../services/api';
 import FileUpload from '../components/FileUpload';
+import ParallaxLayersUpload from '../components/ParallaxLayersUpload';
 import type { Wallpaper, Category, WallpaperType } from '../types/interfaces';
 import { WallpaperType as WallpaperTypeEnum } from '../types/interfaces';
 import type { ColumnsType } from 'antd/es/table';
@@ -99,7 +100,14 @@ const Wallpapers: React.FC = () => {
   const handleEdit = (wallpaper: Wallpaper) => {
     setEditingWallpaper(wallpaper);
     setSelectedWallpaperType(wallpaper.type);
-    form.setFieldsValue(wallpaper);
+    
+    // Convert tags array to comma-separated string for form
+    const formValues = {
+      ...wallpaper,
+      tags: Array.isArray(wallpaper.tags) ? wallpaper.tags.join(', ') : wallpaper.tags
+    };
+    
+    form.setFieldsValue(formValues);
     setModalVisible(true);
   };
 
@@ -112,6 +120,22 @@ const Wallpapers: React.FC = () => {
 
   const handleModalSubmit = async (values: any) => {
     try {
+      // Process tags - convert comma-separated string to array
+      if (values.tags && typeof values.tags === 'string') {
+        values.tags = values.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag);
+      }
+
+      // Ensure parallax settings are properly structured
+      if (values.type === WallpaperTypeEnum.PARALLAX && values.parallaxSettings) {
+        // Validate that at least one layer has an image
+        const validLayers = values.parallaxSettings.layers.filter((layer: any) => layer.imageUrl);
+        if (validLayers.length === 0) {
+          message.error('At least one parallax layer must have an image');
+          return;
+        }
+        values.parallaxSettings.layers = validLayers;
+      }
+
       if (editingWallpaper) {
         await wallpaperApi.update(editingWallpaper.id, values);
         message.success('Wallpaper updated successfully');
@@ -162,6 +186,11 @@ const Wallpapers: React.FC = () => {
           <div style={{ fontWeight: 'bold' }}>{text}</div>
           <div style={{ color: '#666', fontSize: '12px' }}>
             ID: {record.id}
+            {record.type === WallpaperTypeEnum.PARALLAX && record.parallaxSettings && (
+              <div style={{ color: '#1890ff' }}>
+                Layers: {record.parallaxSettings.layers?.length || 0}/3
+              </div>
+            )}
           </div>
         </div>
       ),
@@ -426,6 +455,29 @@ const Wallpapers: React.FC = () => {
                 maxSize={10}
                 listType="picture-card"
               />
+            </Form.Item>
+          )}
+
+          {selectedWallpaperType === WallpaperTypeEnum.PARALLAX && (
+            <Form.Item
+              name="parallaxSettings"
+              label="Parallax Layers Configuration"
+              rules={[{ 
+                required: true, 
+                message: 'Please configure at least one parallax layer!',
+                validator: (_, value) => {
+                  if (!value || !value.layers || value.layers.length === 0) {
+                    return Promise.reject(new Error('At least one layer is required'));
+                  }
+                  const hasValidLayer = value.layers.some((layer: any) => layer.imageUrl);
+                  if (!hasValidLayer) {
+                    return Promise.reject(new Error('At least one layer must have an image'));
+                  }
+                  return Promise.resolve();
+                }
+              }]}
+            >
+              <ParallaxLayersUpload />
             </Form.Item>
           )}
 

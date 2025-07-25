@@ -29,10 +29,20 @@ export const WallpaperType = {
 
 export type WallpaperType = typeof WallpaperType[keyof typeof WallpaperType];
 
+export interface ParallaxLayer {
+  imageUrl: string;
+  zIndex: number;        // Layer depth (1=foreground, 2=middle, 3=background)
+  moveSpeed: number;     // Movement multiplier (0.5-2.0)
+  blurAmount: number;    // Blur for depth effect (0-10)
+  opacity: number;       // Layer opacity (0.1-1.0)
+}
+
 export interface ParallaxSettings {
-  intensity: number;
-  tiltEffect: boolean;
-  motionEffect: boolean;
+  sensitivity: number;      // Overall sensitivity (0.1-1.0)
+  parallaxStrength: number; // Translation distance (10-50px)
+  invertX: boolean;         // Invert X-axis
+  invertY: boolean;         // Invert Y-axis
+  layers: ParallaxLayer[];  // Up to 3 layers
 }
 
 // Category types
