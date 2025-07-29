@@ -28,22 +28,35 @@ const Wallpapers: React.FC = () => {
   const [editingWallpaper, setEditingWallpaper] = useState<Wallpaper | null>(null);
   const [form] = Form.useForm();
   const [selectedWallpaperType, setSelectedWallpaperType] = useState<string>('');
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 20,
+    total: 0,
+  });
 
   useEffect(() => {
-    loadWallpapers();
+    loadWallpapers(pagination.current, pagination.pageSize);
     loadCategories();
-  }, []);
+  }, [selectedType, selectedCategory]);
 
-  const loadWallpapers = async () => {
+  const loadWallpapers = async (page = 1, pageSize = 20) => {
     try {
       setLoading(true);
       const response = await wallpaperApi.getAll({
-        page: 1,
-        limit: 100,
+        page: page,
+        limit: pageSize,
         type: selectedType || undefined,
         category: selectedCategory || undefined,
       });
       setWallpapers(response.data.data);
+      // Update pagination with total from backend
+      if (response.data.meta) {
+        setPagination({
+          current: page,
+          pageSize: pageSize,
+          total: response.data.meta.total || 0,
+        });
+      }
     } catch (error) {
       message.error('Failed to load wallpapers');
     } finally {
@@ -62,7 +75,7 @@ const Wallpapers: React.FC = () => {
 
   const handleSearch = async (value: string) => {
     if (!value.trim()) {
-      loadWallpapers();
+      loadWallpapers(pagination.current, pagination.pageSize);
       return;
     }
 
@@ -81,7 +94,7 @@ const Wallpapers: React.FC = () => {
     try {
       await wallpaperApi.delete(id);
       message.success('Wallpaper deleted successfully');
-      loadWallpapers();
+      loadWallpapers(pagination.current, pagination.pageSize);
     } catch (error) {
       message.error('Failed to delete wallpaper');
     }
@@ -91,7 +104,7 @@ const Wallpapers: React.FC = () => {
     try {
       await wallpaperApi.toggleActive(id);
       message.success('Status updated successfully');
-      loadWallpapers();
+      loadWallpapers(pagination.current, pagination.pageSize);
     } catch (error) {
       message.error('Failed to update status');
     }
@@ -144,7 +157,7 @@ const Wallpapers: React.FC = () => {
         message.success('Wallpaper created successfully');
       }
       setModalVisible(false);
-      loadWallpapers();
+      loadWallpapers(pagination.current, pagination.pageSize);
     } catch (error) {
       message.error(`Failed to ${editingWallpaper ? 'update' : 'create'} wallpaper`);
     }
@@ -318,7 +331,7 @@ const Wallpapers: React.FC = () => {
             value={selectedType}
             onChange={(value) => {
               setSelectedType(value || '');
-              loadWallpapers();
+              loadWallpapers(pagination.current, pagination.pageSize);
             }}
           >
             {Object.values(WallpaperTypeEnum).map(type => (
@@ -333,7 +346,7 @@ const Wallpapers: React.FC = () => {
             value={selectedCategory}
             onChange={(value) => {
               setSelectedCategory(value || '');
-              loadWallpapers();
+              loadWallpapers(pagination.current, pagination.pageSize);
             }}
           >
             {categories.map(category => (
@@ -350,12 +363,15 @@ const Wallpapers: React.FC = () => {
           rowKey="id"
           loading={loading}
           pagination={{
-            total: wallpapers.length,
-            pageSize: 10,
+            ...pagination,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} items`,
+            pageSizeOptions: ['10', '20', '50', '100'],
+          }}
+          onChange={(paginationInfo) => {
+            loadWallpapers(paginationInfo.current || 1, paginationInfo.pageSize || 20);
           }}
           scroll={{ x: 1200 }}
         />
