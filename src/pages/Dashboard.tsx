@@ -30,28 +30,32 @@ const Dashboard: React.FC = () => {
     try {
       setLoading(true);
       
-      // Load basic stats
+      // Load stats with proper totals from metadata
       const [wallpapersRes, categoriesRes, collectionsRes] = await Promise.all([
-        wallpaperApi.getAll({ page: 1, limit: 10 }),
+        wallpaperApi.getAll({ page: 1, limit: 5 }), // Just for recent wallpapers
         categoryApi.getAll(),
         collectionApi.getAll(),
       ]);
 
-      const wallpapers = wallpapersRes.data.data;
+      const recentWallpapers = wallpapersRes.data.data;
       const categories = categoriesRes.data.data;
       const collections = collectionsRes.data.data;
+      
+      // Get actual total from metadata
+      const totalWallpapers = wallpapersRes.data.meta?.total || 0;
 
-      // Calculate total downloads
-      const totalDownloads = wallpapers.reduce((sum, w) => sum + w.downloads, 0);
+      // Calculate total downloads from recent wallpapers (temporary solution)
+      // TODO: Need backend endpoint for total downloads across all wallpapers
+      const recentDownloads = recentWallpapers.reduce((sum, w) => sum + w.downloads, 0);
 
       setStats({
-        totalWallpapers: wallpapers.length,
+        totalWallpapers,
         totalCategories: categories.length,
         totalCollections: collections.length,
-        totalDownloads,
+        totalDownloads: recentDownloads, // This is only from recent 5, not accurate
       });
 
-      setRecentWallpapers(wallpapers.slice(0, 5));
+      setRecentWallpapers(recentWallpapers);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {

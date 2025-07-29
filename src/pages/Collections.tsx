@@ -54,8 +54,31 @@ const Collections: React.FC = () => {
 
   const loadWallpapers = async () => {
     try {
-      const response = await wallpaperApi.getAll({ page: 1, limit: 100 });
-      setWallpapers(response.data.data);
+      // Load all wallpapers with pagination to handle large datasets
+      let allWallpapers: Wallpaper[] = [];
+      let page = 1;
+      let hasMore = true;
+      const limit = 100;
+      
+      // Show loading message
+      const hide = message.loading('Loading wallpapers...', 0);
+      
+      while (hasMore) {
+        const response = await wallpaperApi.getAll({ page, limit });
+        allWallpapers = [...allWallpapers, ...response.data.data];
+        hasMore = response.data.meta?.hasMore || false;
+        page++;
+        
+        // Prevent infinite loop
+        if (page > 10) break; // Max 1000 wallpapers
+      }
+      
+      hide();
+      setWallpapers(allWallpapers);
+      
+      if (allWallpapers.length > 200) {
+        message.info(`Loaded ${allWallpapers.length} wallpapers. Consider using search/filter for better performance.`);
+      }
     } catch (error) {
       message.error('Failed to load wallpapers');
     }
